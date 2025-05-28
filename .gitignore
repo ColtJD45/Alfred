@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environments
+.env
+.venv/
+env/
+venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# MacOS
+.DS_Store
+
+# Logs
+*.log
+
+# Local config
+*.local
+
+# Alfred memory db
+alfred_memory.db
+
+# Frontend dependencies
+frontend/node_modules/
