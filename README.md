@@ -80,27 +80,29 @@ Run these commands in separate terminals or background processes.
 
 ## 📁 Directory Structure (partial)
 
+```plaintext
 alfred_v0.1.3/
 │
 ├── main.py
 ├── backend/
-│ ├── .venv # Python virtual environment (not committed)
-│ ├── nodes/ # Nodes (child agents)
-│ ├── utils/ # Tools and SQLite database utilities
-│ ├── .env # Backend environment variables
-│ ├── alfred_memory.db # Database (auto-generated)
-│ ├── main.py # FastAPI backend entry point
-│ └── requirements.txt # Python dependencies
+│   ├── .venv # Python virtual environment (not committed)
+│   ├── nodes/ # Nodes (child agents)
+│   ├── utils/ # Tools and SQLite database utilities
+│   ├── .env # Backend environment variables
+│   ├── alfred_memory.db # Database (auto-generated)
+│   ├── main.py # FastAPI backend entry point
+│   └── requirements.txt # Python dependencies
 │
 ├── frontend/ # React frontend
-│ ├── public/
-│ ├── src/ # Main UI source (/components/Chat.jsx)
-│ ├── .env # Frontend environment variables
-│ ├── package.json
-│ └── vite.config.js
+│   ├── public/
+│   ├── src/ # Main UI source (/components/Chat.jsx)
+│   ├── .env # Frontend environment variables
+│   ├── package.json
+│   └── vite.config.js
 │
 ├── requirements.txt # Python dependencies (or pyproject.toml)
 ├── README.md # This file
+
 
 
 ---
