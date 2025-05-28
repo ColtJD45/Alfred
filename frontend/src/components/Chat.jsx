@@ -122,7 +122,7 @@ function Chat() {
       }
 
       const data = await response.json();
-      return data.response;  // Changed from data.content to data.response to match your backend
+      return data.response;
     } catch (error) {
       console.error('Error:', error);
       return 'Sorry, I encountered an error. Please try again.';
@@ -141,7 +141,7 @@ function Chat() {
       const aiResponse = await sendMessageToAI(userMessage);
       updateMessages([...messages, { text: userMessage, sender: 'user' }, { text: aiResponse, sender: 'ai' }]);
       setIsLoading(false);
-      inputRef.current.focus(); // keep focus on the input bubble
+      inputRef.current.focus();
     }
   };
 

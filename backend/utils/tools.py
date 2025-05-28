@@ -7,7 +7,9 @@ import json
 import sqlite3
 from typing import List, Dict
 from langchain_community.chat_models import ChatOllama
+import os
 
+ollama_model = os.getenv('OLLAMA_MODEL')
 DEBUG = True
 
     ##############################
@@ -57,7 +59,7 @@ def get_tasks(query: str) -> str:
         print("ALFRED USING GET TASKS TOOL")
 
     parts = query.split('|')
-    params = json.loads(parts[0])  # Expect JSON with filters
+    params = json.loads(parts[0])
     user_id = parts[1] if len(parts) > 1 else 'default'
 
     conn = get_db_connection()
@@ -87,12 +89,12 @@ def get_tasks(query: str) -> str:
 @tool
 def mark_task_completed(query: str) -> str:
     """
-    Use this tool to mark tasks as complete in the task table in the database.
+    Use this tool to mark tasks as complete in the 'task' table in the database.
     """
     if DEBUG:
         print("ALFRED USING MARK TASK COMPLETED TOOL")
 
-    task_id = int(query)  # Just need the task ID
+    task_id = int(query)
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -150,7 +152,7 @@ def get_context(query: str) -> str:
         user_id = parts[1] if len(parts) > 1 else 'default'
 
         llm = ChatOllama(
-        model='llama3:8b',
+        model=ollama_model,
         temperature=0.3
         )
 
@@ -191,7 +193,7 @@ def save_longterm_memory(query: str) -> str:
         print(f"ALFRED USING SAVE LONGTERM MEMORY TOOL")
 
     parts = query.split('|')
-    memory_data = json.loads(parts[0])  # Expect JSON with memory details
+    memory_data = json.loads(parts[0])
     user_id = parts[1] if len(parts) > 1 else 'default'
 
     conn = get_db_connection()
@@ -219,13 +221,13 @@ def save_longterm_memory(query: str) -> str:
 
 def create_chat_entry(role: str, content: str, user_id: str, session_id: str):
     """
-    Use this tool to create a chat entry in the running chat history table in the database
+    Use this tool to create a chat entry in the running 'chat history' table in the database
     """
     if DEBUG == True:
             print("ALFRED USING CREATE CHAT ENTRY TOOL")
 
     return {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now().isoformat(),
         "role": role,
         "content": content,
         "user_id": user_id,
@@ -281,14 +283,15 @@ def save_chat_message(entry: dict):
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT INTO chat_history (timestamp, role, content, user_id, session_id)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO chat_history (
+            timestamp, role, content, user_id, session_id
+        ) VALUES (?, ?, ?, ?, ?)
     ''', (
         entry["timestamp"],
         entry["role"],
         entry["content"],
         entry["user_id"],
-        entry["session_id"]
+        entry["session_id"],
     ))
 
     conn.commit()

@@ -2,29 +2,32 @@
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from agents import ChatSystem
-from agents.alfred_agent import AlfredAgent  
-from agents.memory_llama import MemoryAgent
+import traceback
+from langchain_core.messages import AIMessage, SystemMessage
+from nodes.memory_llama import MemoryAgent
 from utils.db import init_db
 from utils.tools import create_chat_entry, load_chat_history, save_chat_message, load_longterm_memory, save_longterm_memory
+from nodes.alfred_node import workflow  # Import the supervisor workflow you created
 
 app = FastAPI()
 init_db()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # RESTRICT IN PRODUCTION FOR SECURITY
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-alfred_agent = AlfredAgent()
+
 memory_llama = MemoryAgent()
 
-# Initialize the chat system
-chat_system = ChatSystem(
-    llama_model_path="path/to/your/llama/model.gguf"
-)
+compiled_workflow = workflow.compile()
+
+# # Initialize the chat system
+# chat_system = ChatSystem(
+#     llama_model_path="path/to/your/llama/model.gguf"
+# )
 
 class ChatRequest(BaseModel):
     content: str
@@ -35,6 +38,9 @@ class ChatResponse(BaseModel):
     response: str
     chat_history: list
 
+    class Config:
+        arbitrary_types_allowed = True
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
@@ -42,41 +48,59 @@ async def chat(request: ChatRequest):
         user_entry = create_chat_entry("user", request.content, request.user_id, request.session_id)
         save_chat_message(user_entry)
 
+        # Load last N messages for the session/user
+        recent_history = load_chat_history(request.user_id, request.session_id, limit=20)
+        personalization_msg = SystemMessage(content=f"You are speaking to {request.user_id}. Refer to them by name when appropriate.")
+        messages_with_intro = [personalization_msg] + recent_history
+
         # Get response from Alfred
-        response = alfred_agent.process({
-            "messages": [{"role": "user", "content": request.content}],
+        state = {
+            "messages": messages_with_intro,
             "user_id": request.user_id,
-            "session_id": request.session_id
-        })
+            "session_id": request.session_id,
+            "context": {}
+        }
+        # print("Initial state:", state)
 
+        # Invoke the supervisor workflow
+        response = await compiled_workflow.ainvoke(state)
+        # print("Raw workflow response:", response)
+
+        # Extract the actual response content from the AIMessage
         try:
+            # Find the last AIMessage in the messages list
+            messages = response.get('messages', [])
+            ai_messages = [msg for msg in messages if isinstance(msg, AIMessage)]
 
-            # Extract the actual message content
-            response_content = response["messages"][0]["content"]
-        except (KeyError, IndexError) as e:
+            if ai_messages:
+                response_content = ai_messages[-1].content
+            else:
+                response_content = "I apologize, but I couldn't generate a proper response."
+
+            print("Extracted response content:", repr(response_content))
+
+        except Exception as e:
             print(f"Error extracting response content: {e}")
-            print(f"Alfred response structure: {response}")
-            response_content = "I apologize, but I encountered an issue processing your request."
+            print(f"Response structure: {response}")
+            raise ValueError("Failed to extract response content from workflow response")
 
         # Save Alfred's response
         alfred_entry = create_chat_entry("assistant", response_content, request.user_id, request.session_id)
         save_chat_message(alfred_entry)
 
-        # Check if message should be stored in long-term memory
-        memory_llama.check_for_longterm_storage(request.content, request.user_id)
+        # Get updated history after saving the new messages
+        updated_history = load_chat_history(request.user_id, request.session_id, limit=20)
 
-        # Load chat history filtered by user & session
-        history = load_chat_history(request.user_id, request.session_id)
+        return ChatResponse(response=response_content, chat_history=updated_history)
 
-        return ChatResponse(response=response_content, chat_history=history)
     except Exception as e:
         print(f"Error in chat endpoint: {e}")
+        print(f"Error type: {type(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
-            detail="An error occurred while processing your request"
+            detail=f"An error occurred while processing your request: {str(e)}"
         )
-
-    ### Retrieve the last n messages to repopulate chat on browser reload ###
 
 @app.get("/history")
 def get_chat_history(user_id: str = Query("default")):
