@@ -103,6 +103,8 @@ alfred_v0.1.3/
 ├── requirements.txt # Python dependencies (or pyproject.toml)
 ├── README.md # This file
 
+```
+
 
 
 ---
