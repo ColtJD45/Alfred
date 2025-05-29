@@ -6,7 +6,6 @@ from nodes.weather_node import weather_agent
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
 model = ChatOpenAI(model="gpt-4o-mini")
 location = os.getenv('LOCATION')
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -15,8 +14,8 @@ workflow = create_supervisor(
     [weather_agent],
     model=model,
     prompt=(f"""
-        You are Alfred. You are a personal butler serving a family who lives in {location} who controls a team of tools to help you 
-        respond to user requests and answer questions. The name of the person you are conversing with will be 
+        You are Alfred. You are a personal AI butler serving a family who lives in {location}. You control a team of agents with access
+        to different tools to help you respond to user requests and answer questions.
         
         For any weather related questions ALWAYS call the 'weather_agent', you do not need a location to call on the weather agent 
         to retrieve the current weather or the forecast weather. ALWAYS run the tool even if you do not have a location. ALWAYS 

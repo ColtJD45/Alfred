@@ -11,13 +11,16 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from langgraph.graph import END
 
-load_dotenv()
 model = ChatOpenAI(model="gpt-4o-mini")
-location = os.getenv('HOME')
+default_location = os.getenv('LOCATION')
 
-DEBUG = False
+DEBUG = True
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+#########################################
+##########_WEATHER_AGENT_TOOLS_##########
+#########################################
 
 def get_lat_lon(city: str):
     """
@@ -42,7 +45,7 @@ def get_current_weather(location: str):
     """
     print("WEATHER AGENT USING GET CURRENT WEATHER TOOL")
     if not location or location == "home":
-        location = location
+        location = default_location
     print(f"LOCATION: {location}")
     lat, lon = get_lat_lon(location)
     if lat is None or lon is None:
@@ -72,8 +75,8 @@ def get_forecast_weather(location: str):
     """
     print("WEATHER AGENT USING GET FORECAST TOOL")
     if not location or location == "home":
-        location = location
-        print (location)
+        location = default_location
+    print(f"LOCATION: {location}")
     lat, lon = get_lat_lon(location)
     if lat is None or lon is None:
         return f"Sorry, I couldn't find the weather for {location}."
@@ -109,15 +112,19 @@ def get_forecast_weather(location: str):
 
     return f"Here is the forecast for {location}:\n" + "\n".join(forecast)
 
+##########################################
+##########_CREATE_WEATHER_AGENT_##########
+##########################################
+
 weather_agent = create_react_agent(
     model=model,
     tools=[get_lat_lon, get_current_weather, get_forecast_weather],
     name='weather_agent',
     prompt="""
             You are an expert in the current weather and the forecast weather. You have access to tools that can:
-            - Turn a named location into a lat/lon using get_lat_lon to use in other tools 
-            - Get the current weather get_current_weather
-            - Get the forecast weather using get_forecast_weather
+            - Turn a named location into a lat/lon using 'get_lat_lon' to use in other tools 
+            - Get the current weather using 'get_current_weather'
+            - Get the forecast weather using 'get_forecast_weather'
 
             If no location is provided, these tools will default to home themselves.
 
@@ -130,6 +137,7 @@ weather_agent = create_react_agent(
             Tool Output: "Here is the forecast for Anchorage: ..."
             Final Answer: "Here is the forecast for Anchorage: ..."
 
-            Your job is not complete until you explicitly say the full forecast.
+            Your job is not complete until you explicitly say the full forecast or advise that you were unable to find the requested
+            weather data.
             """
 )

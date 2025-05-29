@@ -3,7 +3,9 @@
 Alfred is a lightweight AI assistant project powered by a FastAPI backend, a React frontend, OpenAI GPT models for the main agent,  
 and a LLaMA 3 local model running via Ollama for secondary agents.
 
----
+## Demo
+
+![Demo of feature](./assets/demo.gif)
 
 ## 🛠️ Setup Instructions
 

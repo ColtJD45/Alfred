@@ -1,4 +1,8 @@
 # alfred_v0.1.3/backend/main.py
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +11,7 @@ from langchain_core.messages import AIMessage, SystemMessage
 from nodes.memory_llama import MemoryAgent
 from utils.db import init_db
 from utils.tools import create_chat_entry, load_chat_history, save_chat_message, load_longterm_memory, save_longterm_memory
-from nodes.alfred_node import workflow  # Import the supervisor workflow you created
+from nodes.alfred_node import workflow
 
 app = FastAPI()
 init_db()
@@ -23,11 +27,6 @@ app.add_middleware(
 memory_llama = MemoryAgent()
 
 compiled_workflow = workflow.compile()
-
-# # Initialize the chat system
-# chat_system = ChatSystem(
-#     llama_model_path="path/to/your/llama/model.gguf"
-# )
 
 class ChatRequest(BaseModel):
     content: str
