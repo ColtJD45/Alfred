@@ -1,4 +1,4 @@
-# alfred_v0.1.3/backend/utils/db.py
+# alfred/backend/utils/db.py
 
 import sqlite3
 import os

@@ -1,4 +1,4 @@
-//alfred_v0.1.3/frontend/src/UserIdModal.jsx
+//alfred/frontend/src/UserIdModal.jsx
 import React, { useState } from 'react';
 
 const UserIdModal = ({ onSubmit }) => {

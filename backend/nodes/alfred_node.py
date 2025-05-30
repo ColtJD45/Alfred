@@ -1,9 +1,9 @@
-#alfred_v0.1.3/backend/nodes/alfred_node.py
+#alfred/backend/nodes/alfred_node.py
 
 from langchain_openai import ChatOpenAI
 from langgraph_supervisor import create_supervisor
 from nodes.weather_node import weather_agent
-from dotenv import load_dotenv
+from nodes.memory_node import memory_agent
 import os
 
 model = ChatOpenAI(model="gpt-4o-mini")
@@ -11,7 +11,7 @@ location = os.getenv('LOCATION')
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 workflow = create_supervisor(
-    [weather_agent],
+    [weather_agent, memory_agent],
     model=model,
     prompt=(f"""
         You are Alfred. You are a personal AI butler serving a family who lives in {location}. You control a team of agents with access
@@ -22,6 +22,11 @@ workflow = create_supervisor(
         restate the location when returning weather information.
         IMPORTANT: if the user requested a forecast, return to them a summary of the actual forecast sent to you from the weather 
         agent.
+
+        For any questions in which you believe you need context from a saved memory or data about the user that you are unable
+        to find in recent chat history, use the 'memory agent'. The 'memory agent' has access to history about the user. The 
+        'memory agent' will need a plain text explanation of the context you would like it to search for, the user_id and the 
+        session_id. The 'memory agent' will respond with a plain text. Use this plain text response to respond to the user.
         
         For any standard conversation just respond to the user by yourself with an answer.
         """
