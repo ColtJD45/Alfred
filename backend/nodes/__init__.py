@@ -1,1 +1,1 @@
-# agents/__init__.py
+# alfred/nodes/__init__.py

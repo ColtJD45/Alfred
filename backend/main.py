@@ -1,16 +1,18 @@
-# alfred_v0.1.3/backend/main.py
+# alfred/backend/main.py
 
 from dotenv import load_dotenv
 load_dotenv()
 
+import asyncio
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import traceback
 from langchain_core.messages import AIMessage, SystemMessage
-from nodes.memory_llama import MemoryAgent
+from nodes.memory_node import memory_agent
 from utils.db import init_db
-from utils.tools import create_chat_entry, load_chat_history, save_chat_message, load_longterm_memory, save_longterm_memory
+from utils.tools.chat_tools import load_chat_history, save_chat
+from utils.tools.memory_tools import check_for_longterm_storage
 from nodes.alfred_node import workflow
 
 app = FastAPI()
@@ -23,8 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-memory_llama = MemoryAgent()
 
 compiled_workflow = workflow.compile()
 
@@ -43,14 +43,21 @@ class ChatResponse(BaseModel):
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
-        # Save user message with user ID
-        user_entry = create_chat_entry("user", request.content, request.user_id, request.session_id)
-        save_chat_message(user_entry)
+        # Non-blocking: send latest prompt to be evaluated for longterm storage
+        asyncio.create_task(check_for_longterm_storage(request.content, request.user_id))
 
         # Load last N messages for the session/user
-        recent_history = load_chat_history(request.user_id, request.session_id, limit=20)
+        recent_history = load_chat_history(request.user_id, request.session_id, limit=8)
+
+        # Non-blocking: save the user prompt in chat_history
+        asyncio.create_task(save_chat("user", request.content, request.user_id, request.session_id))
+
+        # Create msg so the llm knows who the user is
         personalization_msg = SystemMessage(content=f"You are speaking to {request.user_id}. Refer to them by name when appropriate.")
-        messages_with_intro = [personalization_msg] + recent_history
+        user_msg_entry = {"role": "user", "content": request.content}
+
+        # Combine messages: intro + recent_hitory + user message
+        messages_with_intro = [personalization_msg] + recent_history + [user_msg_entry]
 
         # Get response from Alfred
         state = {
@@ -59,7 +66,6 @@ async def chat(request: ChatRequest):
             "session_id": request.session_id,
             "context": {}
         }
-        # print("Initial state:", state)
 
         # Invoke the supervisor workflow
         response = await compiled_workflow.ainvoke(state)
@@ -83,14 +89,10 @@ async def chat(request: ChatRequest):
             print(f"Response structure: {response}")
             raise ValueError("Failed to extract response content from workflow response")
 
-        # Save Alfred's response
-        alfred_entry = create_chat_entry("assistant", response_content, request.user_id, request.session_id)
-        save_chat_message(alfred_entry)
+        asyncio.create_task(save_chat("assistant", response_content, request.user_id, request.session_id))
 
-        # Get updated history after saving the new messages
-        updated_history = load_chat_history(request.user_id, request.session_id, limit=20)
-
-        return ChatResponse(response=response_content, chat_history=updated_history)
+        chat_history = messages_with_intro + [{"role": "assistant", "content": response_content}]
+        return ChatResponse(response=response_content, chat_history=chat_history)
 
     except Exception as e:
         print(f"Error in chat endpoint: {e}")
