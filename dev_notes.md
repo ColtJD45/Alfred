@@ -1,53 +1,25 @@
-## v0.2.0 - Memory Agent Implementation (WIP)
+## v0.2.1 - Memory Agent and Weather Agent Optimization
 
-- Refactored Alfred to support version-based directory structure
-- Added new `memory_agent` in `memory_node`
-- Updated supervisor workflow to include `memory_agent`
+## Memory Optimization
+- Added a prefilter for longterm memory search to provide the model with refined information _to improve latency_
 
-## Memory Agent Added
-- Added new `memory_agent` in `memory_node` for use by `supervisor`
+## Weather Optimization
+- Changed the formatting for response of weather API in `get_forecast_weather` for faster model interpretation
+- Changed `get_forecast_weather` function to accomodate for UTC offset to keep forecast from bleeding into the next day
 
-- Created memory function for use by memory_agent:
-  - `get_context`: used when memory_agent decides it needs historical context about the user
-    This function uses the local `llama3:8b` model to search all of the historical context of the specified user, and returns
-    the relevant information to the `memory_agent`
+## Optimized Alfred's prompt
+- Added default location to Alfred's prompt to ensure he used `LOCATION` when no location specified
 
-## Long term memory decision added for each prompt
-- Each prompt is now sent to `llama3` for it to decide if the information needs to be stored in the user's longterm memory database
-  _This decision making process model will most likely undergo further training for accuracy in future versions_
-
-## Reorganized tools into corresponding files for use cases. Removed tools from node scripts.
-
-- Migrated the following functions from `tools` to `memory_tools`:
-  - `check_for_longterm_storage`
+## DEBUG added
+- Added `DEBUG` to `main.py` to assess workflow duration
+- Added `DEBUG` to `chat_tools` to assess duration of `save_chat` and `load_chat_history`
+- Added `DEBUG` to `memory_tools` to asses duration of:
+  - `load_longterm_memory`
   - `save_longterm_memory`
   - `get_context`
-  - `load_longterm_memory`
-
-- Migrated the following functions from `tools` to `chat_tools`:
-  - `create_chat_entry`
-  - `load_chat_history`
-  - `save_chat_message`
-
-- Migrated the following functions from `tools` to `task_tools`: _The task agent will be implemented in a future version_
-  - `create_task`
-  - `get_tasks`
-  - `mark_task_completed`
-
-- Migrated the following functions from `tools` to `location_date_tools`:
-  - `get_current_date`
-  - `get_lat_lon`
-
-- Migrated the following functions from `weather_node` to `weather_tools`:
+- Added `DEBUG` to `weather_tools` to asses duration of:
   - `get_current_weather`
   - `get_forecast_weather`
 
-## Adjustments made for changes throughout
-
-- Updated all imports in `main.py`, `alfred_nodepy`, `weather_node.py` to accomodate tool relocations.
-
-- Removed utils/tools.py
-- Removed nodes/memory_llama.py
-
-# Chores
-- Updated file path comments at the top of each script to match `alfred` name change.
+## Chores
+- Cleaned up `chat_tools` _removed past commented out functions_

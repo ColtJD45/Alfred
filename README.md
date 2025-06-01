@@ -1,10 +1,22 @@
-# Alfred v0.2.0 - README
+# Alfred v0.2.1 - README
 
 Alfred is a lightweight AI assistant project powered by a FastAPI backend, a React frontend, OpenAI GPT models for the main agent, and a LLaMA 3 local model running via Ollama for secondary agents.
 
 ## Demo
 
-![Demo of feature](./assets/demo.gif)
+![Demo of feature](./assets/demo2.gif)
+
+## Features
+
+- Web-based chat interface for interacting with Alfred in real time
+- Short-term memory for smooth, context-aware conversations
+- Long-term memory stored in a user-specific SQLite database for personalization and recall
+- User-specific memory handling for both short-term and long-term contexts
+- Detailed weather reports for any location via the OpenWeatherMap API
+    _Uses OpenCageData for accurate geolocation_
+- Uses GPT-4 via OpenAI for main agent reasoning, with local LLaMA3 for memory tools and context lookups
+
+---
 
 ## 🛠️ Setup Instructions
 
@@ -20,7 +32,7 @@ Make sure the following components are installed before running Alfred:
 
 ## 🔑 Environment Variables
 
-Setup your environment variables:
+Set up your environment variables:
 
 1. Rename `.env.example` to `.env` in both the backend and the frontend directories.
    These `.env` files will hold all of your secrets (like API keys), which the scripts will load automatically when needed.
@@ -86,18 +98,18 @@ alfred_v0.1.3/
 │
 ├── main.py
 ├── backend/
-│   ├── .venv # Python virtual environment (not committed)
-│   ├── nodes/ # Nodes (child agents)
-│   ├── utils/ # Tools and SQLite database utilities
-│   ├── .env # Backend environment variables
-│   ├── alfred_memory.db # Database (auto-generated)
-│   ├── main.py # FastAPI backend entry point
-│   └── requirements.txt # Python dependencies
+│   ├── .venv      # Python virtual environment (not committed)
+│   ├── nodes/     # Nodes (child agents)
+│   ├── utils/     # Tools and SQLite database utilities
+│   ├── .env       # Backend environment variables
+│   ├── alfred_memory.db       # Database (auto-generated)
+│   ├── main.py    # FastAPI backend entry point
+│   └── requirements.txt       # Python dependencies
 │
 ├── frontend/ # React frontend
 │   ├── public/
-│   ├── src/ # Main UI source (/components/Chat.jsx)
-│   ├── .env # Frontend environment variables
+│   ├── src/       # Main UI source (/components/Chat.jsx)
+│   ├── .env       # Frontend environment variables
 │   ├── package.json
 │   └── vite.config.js
 │
@@ -153,27 +165,23 @@ User identification is via localStorage and session IDs only. No authentication 
 
 - Minimal testing done; if making changes, watch out for potential infinite API call loops. Terminate if the app stops responding.  
 - Adjust ports in backend/frontend if conflicts occur.  
-- Ensure Ollama is installed and the `llama3:8b` model is downloaded. Test the llm alone in terminal to insure it is responding.
+- Ensure Ollama is installed and the `llama3:8b` model is downloaded. Test the llm alone in terminal to ensure it is responding.
 - Check internet connectivity if styles or icons don’t load (Google Fonts & FontAwesome use CDNs). These links are in `/frontend/index.html`.
 
 ---
 
-## 📍 Version v0.1.3 — Development Build
-
-Features:
-
-- Web UI chat interface  
-- OpenAI API powered conversation  
-- OpenWeather API integration for weather info and forecasts  
-- Stores prompts and AI responses in SQLite with user/session IDs and timestamps  
-- Local chat history memory recall (last 20 messages by default)  
+## 📍 Version v0.2.1 - Development Build
 
 Planned Next:
 
-- Implement additional nodes (starting with memory node)  
-- Merge prior memory_llama.py features into memory_node for supervisor agent
-- Enable dynamic saving and recalling of longterm memories with LLaMA3 (memory node)
-- Longterm memory stored in SQLite and referenced by Alfred for personalized queries
+- Add streaming to cut down user wait times
+- Enable `task_node` for task creation and editing
+- Add ability to save tasks in SQLite database under a `task` table 
+- Tasks will be searchable and editable by category
+  _(e.g., `lawncare`, `house_cleaning`, `laundry`, `home_maintenance`, etc.)_
+- Tasks will be recallable by `date`, `category`, `assigned_to`
+- Fully local storage of tasks using a local LLM for privacy and reduced API calls
+  _Task data is stored and processed locally; OpenAI is only used for deciding **when** to store, retrieve, or edit tasks_
 
 ---
 

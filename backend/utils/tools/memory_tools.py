@@ -2,6 +2,7 @@
 
 import os
 import json
+import time
 from utils.db import get_db_connection
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -15,7 +16,8 @@ def load_longterm_memory(user_id: str) -> list:
     """
     Use this to find longterm memory or information about the user to help respond to the request.
     """
-    if DEBUG == True:
+    if DEBUG:
+            start = time.perf_counter()
             print(f"LOADING LONGTERM MEMORIES FOR {user_id}")
 
     conn = get_db_connection()
@@ -30,7 +32,9 @@ def load_longterm_memory(user_id: str) -> list:
 
     rows = cursor.fetchall()
     conn.close()
-
+    if DEBUG:
+         duration = time.perf_counter() - start
+         print(f"[DEBUG] load_longterm_memory took {duration:.2f}s")
     return [
         {
             "timestamp": row["timestamp"],
@@ -40,6 +44,18 @@ def load_longterm_memory(user_id: str) -> list:
         } for row in rows
     ]
 
+def filter_relevant_memories(memories, query):
+    keywords = set(query.lower().split())
+    filtered = []
+
+    for mem in memories:
+        combined = f"{mem.get('summary', '')} {' '.join(mem.get('tags', []))}".lower()
+        if any(kw in combined for kw in keywords):
+            filtered.append(mem)
+
+    return filtered or memories[:3]  # Fallback: don't return nothing
+
+
 def get_context(query: str, user_id: str) -> str:
         """
         Use this tool to retrieve relevant context from long-term memory for the given user.
@@ -47,6 +63,7 @@ def get_context(query: str, user_id: str) -> str:
         """
 
         if DEBUG:
+            start = time.perf_counter()
             print(f"MEMORY AGENT IS USING GET CONTEXT TOOL")
 
         llm = ChatOllama(
@@ -57,18 +74,24 @@ def get_context(query: str, user_id: str) -> str:
         memories = load_longterm_memory(user_id)
         if not memories:
             return "No long-term memories found."
+        
+        relevant_memories = filter_relevant_memories(memories, query)
 
         prompt = f"""
         You are an expert in retrieving relevant memories from a database. The user has asked: "{query}"
 
-        Here is everything remembered about this user:
-        {json.dumps(memories, indent=2)}
+        Here are the most relevant memories for this user:
+        {json.dumps(relevant_memories, indent=2)}
 
-        Based on this information, return only the most relevant memory entries that help answer or relate to the user's query. 
+        Based on this information, Return the answer in no more than two short sentences.
         Return as plain text — NOT JSON.
         """
-
+        print(f"LLAMA PROMPT: {prompt}")
         response = llm.invoke(prompt)
+        if DEBUG:
+             print(f"LLAMA RESPONSE: {response.content.strip()}")
+             duration = time.perf_counter() - start
+             print(f"[DEBUG] get_context took {duration:.2f}s")
         return response.content.strip()
 
 def save_longterm_memory(memory_data: dict):
@@ -76,6 +99,7 @@ def save_longterm_memory(memory_data: dict):
     Use this to save longterm memories into the database.
     """
     if DEBUG:
+        start = time.perf_counter()
         print(f"ALFRED USING SAVE LONGTERM MEMORY TOOL")
 
     user_id = memory_data.get('user_id', 'None')
@@ -98,6 +122,8 @@ def save_longterm_memory(memory_data: dict):
     conn.close()
 
     if DEBUG:
+        duration = time.perf_counter() - start
+        print(f"[DEBGUG] save_longterm_memory took {duration:.2f}s")
         print("Memory saved successfully")
 
     return "Memory saved successfully"

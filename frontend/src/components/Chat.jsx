@@ -1,4 +1,4 @@
-//alfred/frontend/src/Chat.jsx
+//alfred_v0.1.3/frontend/src/Chat.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import alfredLogo from '../assets/Alfred.png';
 import UserIdModal from './UserIdModal';

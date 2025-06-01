@@ -4,6 +4,7 @@ from .location_date_tools import get_lat_lon
 from datetime import datetime
 import requests
 import os
+import time
 
 default_location = os.getenv('LOCATION')
 
@@ -13,11 +14,19 @@ def get_current_weather(location: str):
     """
     Use this tool to get the current weather for a location.
     """
+    if DEBUG:
+        start = time.perf_counter()
     print("WEATHER AGENT USING GET CURRENT WEATHER TOOL")
+
     if not location or location == "home":
         location = default_location
     print(f"LOCATION: {location}")
+    if DEBUG:
+        start_lat_lon = time.perf_counter()
     lat, lon = get_lat_lon(location)
+    if DEBUG:
+        duration_lat_lon = time.perf_counter() - start_lat_lon
+        print(f"[DEBUG] get_lat_lon took {duration_lat_lon:2f}s")
     if lat is None or lon is None:
         return f"Sorry, I couldn't find the weather for {location}."
     params = {
@@ -28,8 +37,12 @@ def get_current_weather(location: str):
         'lang': 'en'
     }
     url = "http://api.openweathermap.org/data/2.5/weather"
+    if DEBUG:
+        start_weather = time.perf_counter()
     response = requests.get(url, params=params)
     if DEBUG:
+        duration_weather = time.perf_counter() - start_weather
+        print(f"[DEBUG] weather_API took {duration_weather:.2f}s")
         print(f'WEATHER API RESPONSE: {response}')
     data = response.json()
     desc = data['weather'][0]['description']
@@ -38,17 +51,24 @@ def get_current_weather(location: str):
     city_name = data['name']
 
     if DEBUG:
+        duration = time.perf_counter() - start
+        print(f"[DEBUG] get_current_weather took {duration:.2f}s")
         print(f"CITY NAME: {city_name}. DESCRIPTION: {desc}, TEMP: {temp}, HUMIDITY: {humidity}")
-    return f"The current weather in {city_name} is {desc} with a temperature of {temp}°F, humidity is {humidity}%."
+    return f"{city_name} | {desc} | {temp}F | Humidity: {humidity}%"
+
 
 def get_forecast_weather(location: str):
     """
     Use this tool to get the forecast weather for a location.
     """
-    print("WEATHER AGENT USING GET FORECAST TOOL")
+    print("WEATHER AGENT USING GET FORECAST WEATHER TOOL")
+    if DEBUG:
+        start = time.perf_counter()
+
     if not location or location == "home":
         location = default_location
     print(f"LOCATION: {location}")
+
     lat, lon = get_lat_lon(location)
     if lat is None or lon is None:
         return f"Sorry, I couldn't find the weather for {location}."
@@ -62,9 +82,10 @@ def get_forecast_weather(location: str):
     url = "http://api.openweathermap.org/data/2.5/forecast"
     response = requests.get(url, params=params)
     data = response.json()
+
     daily = {}
     for entry in data['list']:
-        dt = datetime.fromtimestamp(entry['dt']).strftime("%Y-%m-%d")
+        dt = entry["dt_txt"][:10]  # Local date in YYYY-MM-DD
         temp = entry['main']['temp']
         sky = entry['weather'][0]['description']
         pop = entry.get("pop", 0)
@@ -74,12 +95,15 @@ def get_forecast_weather(location: str):
             daily[dt]['high'] = max(daily[dt]['high'], temp)
             daily[dt]['low'] = min(daily[dt]['low'], temp)
             daily[dt]['pop'] = max(daily[dt]['pop'], pop)
-    forecast = []
+    
+    forecast = ["date | hi | lo | sky | pop"]
     for day, val in daily.items():
         forecast.append(
-            f"{day}: High {round(val['high'])}°F, Low {round(val['low'])}°F, Sky: {val['sky']}, Precipitation: {round(val['pop']*100)}%"
+            f"{day} | {round(val['high'])} | {round(val['low'])} | {val['sky']} | {round(val['pop'] * 100)}"
         )
-        if DEBUG:
-            print(f"FORECAST: {forecast}")
+    if DEBUG:
+        duration = time.perf_counter() - start
+        print(f"[DEBUG] get_forecast_weather took {duration:.2f}s")
+        print(f"FORECAST: {forecast}")
 
     return f"Here is the forecast for {location}:\n" + "\n".join(forecast)

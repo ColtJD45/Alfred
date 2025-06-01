@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import asyncio
+import time
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +15,8 @@ from utils.db import init_db
 from utils.tools.chat_tools import load_chat_history, save_chat
 from utils.tools.memory_tools import check_for_longterm_storage
 from nodes.alfred_node import workflow
+
+DEBUG = True
 
 app = FastAPI()
 init_db()
@@ -66,10 +69,15 @@ async def chat(request: ChatRequest):
             "session_id": request.session_id,
             "context": {}
         }
-
+    
         # Invoke the supervisor workflow
+        if DEBUG:
+            start = time.perf_counter()
+
         response = await compiled_workflow.ainvoke(state)
-        # print("Raw workflow response:", response)
+        if DEBUG:
+            duration = time.perf_counter() - start
+            print(f"[DEBUG] workflow took {duration:.2f}s")
 
         # Extract the actual response content from the AIMessage
         try:
