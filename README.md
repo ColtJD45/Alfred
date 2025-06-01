@@ -4,7 +4,7 @@ Alfred is a lightweight AI assistant project powered by a FastAPI backend, a Rea
 
 ## Demo
 
-![Demo of feature](./assets/demo2.gif)
+![Demo of feature](./assets/Demo2.gif)
 
 ## Features
 
