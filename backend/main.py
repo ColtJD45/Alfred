@@ -78,6 +78,9 @@ async def chat(request: ChatRequest):
         if DEBUG:
             duration = time.perf_counter() - start
             print(f"[DEBUG] workflow took {duration:.2f}s")
+            # Check if any intermediate tool calls happened
+            intermediate_steps = response.get("intermediate_steps", None)
+            print(f"[DEBUG] intermediate_steps: {intermediate_steps}")
 
         # Extract the actual response content from the AIMessage
         try:
