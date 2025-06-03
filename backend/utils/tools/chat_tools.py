@@ -47,7 +47,7 @@ async def save_chat(role: str, content: str, user_id: str, session_id: str):
         "session_id": session_id,
     }
 
-def load_chat_history(user_id: str, session_id: str = None, limit: int = 50) -> list:
+def load_chat_history(user_id: str, session_id: str = None, limit: int = 10) -> list:
     """
     Use this tool to load the chat history, mainly here to build the chat window back up on new browser load.
     """
