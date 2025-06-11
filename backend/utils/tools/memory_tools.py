@@ -7,11 +7,13 @@ from utils.db import get_db_connection
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from langchain_ollama import ChatOllama
+from langchain_core.tools import tool
 
 model = os.getenv('OLLAMA_MODEL')
 
 DEBUG = True
 
+@tool
 def load_longterm_memory(user_id: str) -> list:
     """
     Use this to find longterm memory or information about the user to help respond to the request.
@@ -55,7 +57,7 @@ def filter_relevant_memories(memories, query):
 
     return filtered or memories[:3]  # Fallback: don't return nothing
 
-
+@tool
 def get_context(query: str, user_id: str) -> str:
         """
         Use this tool to retrieve relevant context from long-term memory for the given user.
@@ -94,15 +96,15 @@ def get_context(query: str, user_id: str) -> str:
              print(f"[DEBUG] get_context took {duration:.2f}s")
         return response.content.strip()
 
-def save_longterm_memory(memory_data: dict):
+@tool
+def save_longterm_memory(user_id: str, content: str, summary: str, tags: list):
+
     """
     Use this to save longterm memories into the database.
     """
     if DEBUG:
         start = time.perf_counter()
         print(f"ALFRED USING SAVE LONGTERM MEMORY TOOL")
-
-    user_id = memory_data.get('user_id', 'None')
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -113,9 +115,9 @@ def save_longterm_memory(memory_data: dict):
     ''', (
         datetime.now().isoformat(),
         user_id,
-        memory_data['content'],
-        memory_data.get('summary', ''),
-        json.dumps(memory_data.get('tags', []))
+        content,
+        summary,
+        json.dumps(tags)
     ))
 
     conn.commit()
@@ -128,6 +130,7 @@ def save_longterm_memory(memory_data: dict):
 
     return "Memory saved successfully"
 
+@tool
 async def check_for_longterm_storage(content: str, user_id: str):
         """Decide if a message should be stored in long-term memory"""
 

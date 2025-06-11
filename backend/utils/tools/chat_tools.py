@@ -37,7 +37,7 @@ async def save_chat(role: str, content: str, user_id: str, session_id: str):
 
     if DEBUG:
          duration = time.perf_counter() - start
-         print(f"[DEBUG] save_chat_tool took {duration:.2f}s")
+         print(f"[DEBUG] save_chat_tool took {duration:.2f}s\n")
 
     return {
         "timestamp": timestamp,
@@ -47,7 +47,7 @@ async def save_chat(role: str, content: str, user_id: str, session_id: str):
         "session_id": session_id,
     }
 
-def load_chat_history(user_id: str, session_id: str = None, limit: int = 50) -> list:
+def load_chat_history(user_id: str, session_id: str = None, limit: int = 6) -> list:
     """
     Use this tool to load the chat history, mainly here to build the chat window back up on new browser load.
     """
@@ -80,7 +80,7 @@ def load_chat_history(user_id: str, session_id: str = None, limit: int = 50) -> 
 
     if DEBUG:
          duration = time.perf_counter() - start
-         print(f"[DEBUG] load_chat_history took {duration:.2f}s")
+         print(f"[DEBUG] load_chat_history took {duration:.2f}s\n")
 
     return [
         {
