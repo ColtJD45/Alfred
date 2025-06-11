@@ -1,4 +1,4 @@
-# Alfred v0.2.1 - README
+# Alfred v0.3.0 - README
 
 Alfred is a lightweight AI assistant project powered by a FastAPI backend, a React frontend, OpenAI GPT models for the main agent, and a LLaMA 3 local model running via Ollama for secondary agents.
 
@@ -170,18 +170,15 @@ User identification is via localStorage and session IDs only. No authentication 
 
 ---
 
-## 📍 Version v0.2.1 - Development Build
+## 📍 Version v0.3.0 - Development Build
 
 Planned Next:
 
 - Add streaming to cut down user wait times
-- Enable `task_node` for task creation and editing
-- Add ability to save tasks in SQLite database under a `task` table 
-- Tasks will be searchable and editable by category
-  _(e.g., `lawncare`, `house_cleaning`, `laundry`, `home_maintenance`, etc.)_
-- Tasks will be recallable by `date`, `category`, `assigned_to`
-- Fully local storage of tasks using a local LLM for privacy and reduced API calls
-  _Task data is stored and processed locally; OpenAI is only used for deciding **when** to store, retrieve, or edit tasks_
+- Enable more abilities to `memory_node`
+  - Fine tune `check_for_longterm_memory`
+  - Add check for already stored memory for `check_for_longterm_memory`
+  - Fine tune search for `get_context` for accuracy and latency
 
 ---
 
