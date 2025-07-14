@@ -1,4 +1,4 @@
-# Alfred v0.3.0 - README
+# Alfred v0.3.1 - README
 
 Alfred is a lightweight AI assistant project powered by a FastAPI backend, a React frontend, OpenAI GPT models for the main agent, and a LLaMA 3 local model running via Ollama for secondary agents.
 
@@ -170,14 +170,34 @@ User identification is via localStorage and session IDs only. No authentication 
 
 ---
 
-## 📍 Version v0.3.0 - Development Build
+## 📍 Version v0.3.1 - Development Build
 
-Planned Next:
+## Future Upgrades:
+
+- Include Gmail monitoring to automatically create tasks via Zapier when email sent to home email address for things like:
+  - Furnace filter change alerts
+  - `Fixd` alerts for auto maintenance
+  - Home insurance yearly reviews
+  - Hot tub maintenance via monitoring app
+  - Cold plunge maintenance via monitoring app
+  - Smoke detector battery changes via home maintenance app
+  - Home server maintenance and error faults via iDRAC email alerts
+  - Automatically create a task to call and schedule dog grooming/healthcare via reminder emails
+  - Create template for setting up any creation of a task based on received emails
 
 - Add streaming to cut down user wait times
+
+## Future Future upgrades
+- Implement `OpenAI API` with curated promting to analyze these emails and create these tasks based on:
+  - Schedule availability
+  - Urgency of specific task
+  - Combination of like tasks for efficiency
+  - Ability to change an already created tasks for room for a more important/urgent task
+
+- Add streaming to cut down user wait times
+
 - Enable more abilities to `memory_node`
   - Fine tune `check_for_longterm_memory`
-  - Add check for already stored memory for `check_for_longterm_memory`
   - Fine tune search for `get_context` for accuracy and latency
 
 ---

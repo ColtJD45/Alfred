@@ -6,13 +6,16 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import SystemMessage
 
 import os
+import time
+from config import DEBUG, DEEP_DEBUG
 from datetime import datetime
 
-DEBUG = True
-
-llm = ChatOpenAI(model=os.getenv("OPENAI_MODEL"))
+llm = ChatOpenAI(model=os.getenv("OPENAI_SECONDARY_MODEL"))
 
 def alfred_node(state: State):
+    if DEBUG:
+        start = time.perf_counter()
+        print("[DEBUG] Starting alfred_node\n")
     user_id = state.get("user_id").lower()
     session_id = state.get("session_id").lower()
     today = datetime.now()
@@ -30,17 +33,19 @@ def alfred_node(state: State):
 
     """
     chat_history = load_chat_history(user_id, session_id, 6)
-    if DEBUG:
-        print(f"ALFRED NODE CHAT HISTORY: {chat_history}")
+    if DEEP_DEBUG:
+        print(f"[DEEP_DEBUG] Alfred_node chat history: {chat_history}\n")
+
     system_msg = SystemMessage(content=system_prompt)
     all_messages = state["messages"]
-    if DEBUG:
-        print(f"ALFRED NODE STATE INPUT: {all_messages}")
 
     messages = [system_msg] + chat_history + all_messages
-    if DEBUG:
-        print(f"ALFRED STATE: {messages}")
+    if DEEP_DEBUG:
+        print(f"[DEEP_DEBUG] Alfred_node state: {messages}\n")
 
     reply = llm.invoke(messages)
+    if DEBUG:
+        duration = time.perf_counter() - start
+        print(f"[DEBUG] Alfred_node took {duration:.2f}s\n")
 
     return {"messages": [{"role": "assistant", "content": reply.content}]}

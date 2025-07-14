@@ -1,17 +1,17 @@
 # alfred/backend/utils/tools/task_tools.py
 
 import json
+import requests
 from utils.db import get_db_connection
 from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 import os
 import time
 from .location_date_tools import parse_date
 import traceback
-
-DEBUG = True
+from config import DEBUG, DEEP_DEBUG
 
 model = os.getenv('OLLAMA_MODEL')
 
@@ -34,18 +34,19 @@ def create_new_task(user_id: str, category: str, task: str, date: str, recurrenc
 
     if DEBUG:
         start = time.perf_counter()
-        print("TASK AGENT USING CREATE TASK TOOL")
-        print(f"USER_ID: {user_id}, CATEGORY: {category}, TASK: {task}, DATE: {date}, RECURRENCE: {recurrence}")
+        print("[DEBUG] Using create_new_task TOOL\n")
+        print(f"USER_ID: {user_id}, CATEGORY: {category}, TASK: {task}, DATE: {date}, RECURRENCE: {recurrence}\n")
     
     try:
         due_date = parse_date(date)
+        end_date = due_date + timedelta(minutes=30)
 
         if not due_date:
-            print(f"DEBUG: Parse date due_date: {due_date}")
+            print(f"DEBUG: Parse date due_date: {due_date}\n")
             raise ValueError(f"Could not parse due date from: '{date}'")
     
-        if DEBUG:
-            print(f"DUE_DATE_PARSED: {due_date}")
+        if DEEP_DEBUG:
+            print(f"[DEEP_DEBUG] Due_date_parsed: {due_date}\n")
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -60,17 +61,68 @@ def create_new_task(user_id: str, category: str, task: str, date: str, recurrenc
         task_id = cursor.lastrowid
         conn.close()
 
+        # Build the description
+        description_lines = [
+            f"User ID: {user_id}",
+            f"Category: {category}",
+            f"Recurrence: {recurrence}",
+        ]
+        if notes:
+            description_lines.append(f"Notes: {notes}")
+
+        description_text = "\n".join(description_lines)
+
+        # Format RRULE if applicable
+        rrule = None
+        if recurrence != "once":
+            freq_map = {
+                "daily": "FREQ=DAILY",
+                "weekly": "FREQ=WEEKLY",
+                "monthly": "FREQ=MONTHLY",
+                "yearly": "FREQ=YEARLY"
+            }
+            rrule = f"RRULE:{freq_map.get(recurrence, 'FREQ=DAILY')}"
+
+        print(f"[DEBUG] due_date type: {type(due_date)} value: {due_date}")
+
+        # Send webhook to Zapier
+        try:
+            send_task_to_zapier({
+                "title": task,
+                "description": description_text,
+                "due": due_date.isoformat(),
+                "end": end_date.isoformat(),
+                "recurrence": rrule
+            })
+            print(f"DUE DATE SENT TO ZAPIER: {due_date.isoformat()}Z")
+        except Exception as zap_err:
+            if DEBUG:
+                print(f"[WARNING] Failed to send task to Zapier: {zap_err}")
+
         if DEBUG:
-            print("TASK COMPLETED SUCCESFULLY")
+            print("[DEBUG] Task created successfully\n")
             duration = time.perf_counter() - start
-            print(f"[DEBUG] create_new_task took {duration:.2f}s")
+            print(f"[DEBUG] create_new_task took {duration:.2f}s\n")
 
         return f"Event created successfully with ID: {task_id}"
+
     except Exception as e:
         if DEBUG:
             print(f"[ERROR] Exception during event creation: {e}")
             traceback.print_exc()
         return f"Error creating event: {str(e)}"
+
+    
+def send_task_to_zapier(task):
+    webhook_url = "https://hooks.zapier.com/hooks/catch/23784774/u244hog/"
+    payload = {
+        "title": task["title"],
+        "description": task.get("description", ""),
+        "due": task.get("due"),
+        "end": task.get("end"),
+        "recurrence": task.get("recurrence"),
+    }
+    requests.post(webhook_url, json=payload)
 
 @tool
 def get_tasks(user_id: str) -> str:
@@ -81,7 +133,7 @@ def get_tasks(user_id: str) -> str:
     user_id = user_id.lower()
     if DEBUG:
         start = time.perf_counter()
-        print(f"TASK AGENT USING GET TASKS TOOL for {user_id}")
+        print(f"[DEBUG] Using get_tasks TOOL\n for {user_id}\n")
 
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
@@ -100,7 +152,7 @@ def get_tasks(user_id: str) -> str:
 
     if DEBUG:
         duration = time.perf_counter() - start
-        print(f"[DEBUG] get_tasks took {duration:.2f}s")
+        print(f"[DEBUG] get_tasks took {duration:.2f}s\n")
         
     print(f"{json.dumps([dict(row) for row in rows])}")
     return json.dumps([dict(row) for row in rows])
@@ -111,7 +163,7 @@ def find_matching_task(user_id: str, query: str) -> int | None:
     Use this tool to find matching tasks in task table.
     """
     if DEBUG:
-        print(f"TASK AGENT USING FIND MATCHING TASK")
+        print(f"[DEBUG] Using find_matching_task TOOL\n")
         start = time.perf_counter()
     task_list = get_tasks(user_id)
     prompt = f"""
@@ -131,7 +183,7 @@ def find_matching_task(user_id: str, query: str) -> int | None:
     response = llm.invoke(prompt).content.strip()
     if DEBUG:
         duration = time.perf_counter() - start
-        print(f"[DEBUG] find_matching_task took {duration:.2f}s")
+        print(f"[DEBUG] find_matching_task took {duration:.2f}s\n")
     try:
         if response.lower() == "none":
             return None
@@ -145,12 +197,12 @@ def mark_task_completed(user_id, query) -> str:
     Use this tool to mark tasks as complete in the 'task' table in the database.
     """
     if DEBUG:
-        print("TASK AGENT USING MARK TASK COMPLETED TOOL")
+        print("[DEBUG] Using mark_task_completed TOOL\n")
         start = time.perf_counter()
 
     task_id = find_matching_task(user_id, query)
     if not task_id:
-        print("NO MATCHING TASK FOUND")
+        print("[DEBUG] NO MATCHING TASK FOUND\n")
         return "No Matching Task Found."
 
     conn = get_db_connection()
@@ -161,5 +213,5 @@ def mark_task_completed(user_id, query) -> str:
 
     if DEBUG:
         duration = time.perf_counter() - start
-        print(f"[DEBUG] mark_task_completed took {duration:.2f}s")
+        print(f"[DEBUG] mark_task_completed took {duration:.2f}s\n")
     return f"Task {task_id} marked as completed"

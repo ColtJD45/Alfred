@@ -6,10 +6,9 @@ import requests
 import os
 import time
 from langchain_core.tools import tool
+from config import DEBUG, DEEP_DEBUG
 
 default_location = os.getenv('LOCATION')
-
-DEBUG = True
 
 @tool
 def get_current_weather(location: str = None):
@@ -18,11 +17,12 @@ def get_current_weather(location: str = None):
     """
     if DEBUG:
         start = time.perf_counter()
-        print("WEATHER AGENT USING GET CURRENT WEATHER TOOL")
+        print("[DEBUG] Using get_current_weather TOOL\n")
 
     if not location or location == "home":
         location = default_location
-    print(f"LOCATION: {location}")
+    if DEBUG:
+        print(f"[DEBUG] Location: {location}")
 
     lat, lon = get_lat_lon(location)
 
@@ -39,10 +39,13 @@ def get_current_weather(location: str = None):
     if DEBUG:
         start_weather = time.perf_counter()
     response = requests.get(url, params=params)
+
     if DEBUG:
         duration_weather = time.perf_counter() - start_weather
-        print(f"[DEBUG] weather_API took {duration_weather:.2f}s")
-        print(f'WEATHER API RESPONSE: {response}')
+        print(f"[DEBUG] weather_API took {duration_weather:.2f}s\n")
+    if os.getenv("DEEP_DEBUG"):
+        print(f"[DEBUG] Weather API response: {response}\n")
+
     data = response.json()
     desc = data['weather'][0]['description']
     temp = int(data['main']['temp'])
@@ -51,9 +54,9 @@ def get_current_weather(location: str = None):
 
     if DEBUG:
         duration = time.perf_counter() - start
-        print(f"[DEBUG] get_current_weather took {duration:.2f}s")
-
-    print(f"CITY NAME: {city_name}. DESCRIPTION: {desc}, TEMP: {temp}, HUMIDITY: {humidity}")
+        print(f"[DEBUG] get_current_weather took {duration:.2f}s\n")
+    if DEEP_DEBUG:
+        print(f"CITY NAME: {city_name}. DESCRIPTION: {desc}, TEMP: {temp}, HUMIDITY: {humidity}")
     return f"{city_name} | {desc} | {temp}F | Humidity: {humidity}%"
 
 @tool
@@ -64,11 +67,12 @@ def get_forecast_weather(location: str = None):
 
     if DEBUG:
         start = time.perf_counter()
-        print("WEATHER AGENT USING GET FORECAST WEATHER TOOL")
+        print("[DEBUG] Using get_forecast_weather TOOL\n")
 
     if not location or location == "home":
         location = default_location
-    print(f"LOCATION: {location}")
+    if DEBUG:
+        print(f"[DEBUG] Location: {location}")
 
     lat, lon = get_lat_lon(location)
     if lat is None or lon is None:
@@ -104,7 +108,8 @@ def get_forecast_weather(location: str = None):
         )
     if DEBUG:
         duration = time.perf_counter() - start
-        print(f"[DEBUG] get_forecast_weather took {duration:.2f}s")
-        print(f"FORECAST: {forecast}")
+        print(f"[DEBUG] get_forecast_weather took {duration:.2f}s\n")
+    if DEEP_DEBUG:
+        print(f"[DEBUG] Forecast: {forecast}\n")
 
     return f"Here is the forecast for {location}:\n" + "\n".join(forecast)

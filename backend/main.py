@@ -56,7 +56,7 @@ async def chat(request: ChatRequest):
         session_id = request.session_id.lower()
 
         # Non-blocking: send latest prompt to be evaluated for longterm storage
-        #---asyncio.create_task(check_for_longterm_storage(request.content, request.user_id))
+        asyncio.create_task(check_for_longterm_storage(request.content, user_id))
 
         # Non-blocking: save the user prompt in chat_history
         asyncio.create_task(save_chat("user", request.content, user_id, session_id))
