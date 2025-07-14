@@ -2,27 +2,28 @@
 
 import os
 import time
+from config import DEBUG, DEEP_DEBUG
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage
 from graph.state import State
 from utils.tools.task_tools import create_new_task, get_tasks, mark_task_completed
-from utils.tools.location_date_tools import parse_date
 from datetime import datetime
 
-DEBUG = True
-
 default_location = os.getenv("LOCATION")
-task_tools = [create_new_task, get_tasks, mark_task_completed, parse_date]
+task_tools = [create_new_task, get_tasks, mark_task_completed]
 
-llm = ChatOpenAI(model=os.getenv("OPENAI_MODEL"))
+llm = ChatOpenAI(model=os.getenv("OPENAI_SECONDARY_MODEL"))
 #llm = ChatOllama(model=os.getenv("OLLAMA_MODEL"))
 llm_with_tools = llm.bind_tools(task_tools)
 today = datetime.now()
 
 def task_node(state: State):
-    start = time.perf_counter()
-    print(f"TASK NODE STATE: {state}")
+    if DEBUG:
+        start = time.perf_counter()
+        print("[DEBUG] Starting task_node\n")
+    if DEEP_DEBUG:
+        print(f"[DEBUG] Task node state: {state}\n")
 
     user_id = state.get("user_id").lower().strip()
 
@@ -31,8 +32,10 @@ def task_node(state: State):
     or mark tasks as completed. You must retrieve information out of the prompt to pass to the tool.
     ALWAYS RUN A TOOL CALL.
     NEVER ASK THE USER FOR MORE INFORMATION. DECIDE THE INFORMATION YOURSELF.
+    If you are called upon, always use a tool.
+    DO NOT respond until you have used a tool, respond with 'successfull' or 'unsuccessfull'.
     Today is {today}.
-    For the user_id ALWAYS use {user_id}.
+    For the user_id ALWAYS use {user_id}, unless the user specifies a user name or user_id in the prompt.
     Available tools:
     create_new_task - use this to create a new task, include times if given by the user
     get_tasks - use this to retrieve a list of tasks for the user
@@ -54,8 +57,8 @@ def task_node(state: State):
     new_messages = state["messages"] + [response]
 
     if DEBUG:
-        print(f"TASK AGENT RESPONSE: {response.content}")
+        print(f"[DEBUG] Task node response: {response.content}\n")
         duration = time.perf_counter() - start
-        print(f"TASK NODE TOOK: {duration:.2f}s")
+        print(f"[DEBUG] Task node took: {duration:.2f}s\n")
 
     return {"messages": new_messages}

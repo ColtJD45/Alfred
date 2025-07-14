@@ -1,0 +1,122 @@
+[
+    {
+        "message": "My cat's name is Memphis.",
+        "response": {
+            "save": true,
+            "summary": "User's cat Memphis takes medication at 7pm",
+            "tags": ["cat", "pet_info", "name"]
+        }
+    },
+    {
+        "message": "This should be saved to longterm memory, my house was built in 2017.",
+        "response": {
+            "save": true,
+            "summary": "User's house was built in 2017",
+            "tags": ["house", "home_info", "built"]
+        }
+    },
+    {
+        "message": "Can you remember when I was a kid I had a dog named Jocko?",
+        "response": {
+            "save": true,
+            "summary": "User once had a dog named Jocko.",
+            "tags": ["dog", "pet_info", "childhood"]
+        }
+    },
+    {
+        "message": "What's the weather like today?",
+        "response": {
+            "save": false,
+            "summary": "",
+            "tags": []
+        }
+    },
+    {
+        "message": "My birthday is August 20th.",
+        "response": {
+            "save": true,
+            "summary": "User's birthday is August 20th",
+            "tags": ["birthday", "personal_info"]
+        }
+    },
+    {
+        "message": "Turn off the lights in the living room.",
+        "response": {
+            "save": false,
+            "summary": "",
+            "tags": []
+        }
+    },
+    {
+        "message": "Add a task to clean the bathroom every Friday",
+        "response": {
+            "save": false,
+            "summary": "",
+            "tags": []
+        }
+    },
+    {
+        "message": "My favorite color is blue.",
+        "response": {
+            "save": true,
+            "summary": "User's favorite color is blue",
+            "tags": ["preference", "color", "personal_info"]
+        }
+    },
+    {
+        "message": "My wife and I met May 17th, 1969",
+        "response": {
+            "save": true,
+            "summary": "User met their wife May 17th, 1969",
+            "tags": ["personal_info", "user_history", "relationship"]
+        }
+    },
+    {
+        "message": "Remind me to wash the car tomorrow",
+        "response": {
+            "save": false,
+            "summary": "",
+            "tags": []
+        }
+    },
+    {
+        "message": "I bought my car July 20th, 2016",
+        "response": {
+            "save": true,
+            "summary": "User bought their car July 20th, 2016",
+            "tags": ["personal_info", "purchase", "user_history"]
+        }
+    },
+    {
+        "message": "My best golf score was an 85",
+        "response": {
+            "save": true,
+            "summary": "User's best golf score was an 85",
+            "tags": ["personal_info", "personal_record", "user_history"]
+        }
+    },
+    {
+        "message": "Jake is my best friend",
+        "response": {
+            "save": true,
+            "summary": "",
+            "tags": ["personal_info", "preference", "relationship"]
+        }
+    },
+    {
+        "message": "I went to the lake last weekend",
+        "response": {
+            "save": false,
+            "summary": "",
+            "tags": []
+        }
+    },
+    {
+        "message": "I really like the new Corvette!",
+        "response": {
+            "save": true,
+            "summary": "User likes the new Corvette",
+            "tags": ["preference", "auto"]
+        }
+    }
+]

@@ -2,13 +2,12 @@
 
 import os
 import time
+from config import DEBUG, DEEP_DEBUG
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage
 from graph.state import State
 from utils.tools.weather_tools import get_current_weather, get_forecast_weather
-
-DEBUG = True
 
 default_location = os.getenv("LOCATION")
 weather_tools = [get_current_weather, get_forecast_weather]
@@ -25,12 +24,13 @@ sys_msg = SystemMessage(content=f"""
 def weather_node(state: State):
     if DEBUG:
         start = time.perf_counter()
-        print(f"WEATHER NODE STATE: {state}")
+    if DEEP_DEBUG:
+        print(f"[DEEP_DEBUG] Weather node state: {state}\n")
 
     response = llm_with_tools.invoke([sys_msg] + state["messages"])
     new_messages = state["messages"] + [response]
 
     if DEBUG:
         duration = time.perf_counter() - start
-        print(f"WEATHER NODE TOOK {duration:.2f}s")
+        print(f"[DEBUG] Weather node took {duration:.2f}s\n")
     return {"messages": new_messages}

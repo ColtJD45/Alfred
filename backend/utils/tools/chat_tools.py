@@ -4,13 +4,12 @@ from datetime import datetime
 from utils.db import get_db_connection
 import time
 import asyncio
-
-DEBUG = True
+from config import DEBUG, DEEP_DEBUG
 
 async def save_chat(role: str, content: str, user_id: str, session_id: str):
     if DEBUG:
         start = time.perf_counter()
-        print("ALFRED USING SAVE CHAT TOOL")
+        print("[DEBUG] Using save_chat TOOL\n")
 
     timestamp = datetime.now().isoformat()
 
@@ -37,7 +36,7 @@ async def save_chat(role: str, content: str, user_id: str, session_id: str):
 
     if DEBUG:
          duration = time.perf_counter() - start
-         print(f"[DEBUG] save_chat_tool took {duration:.2f}s\n")
+         print(f"[DEBUG] Save_chat_tool took {duration:.2f}s\n")
 
     return {
         "timestamp": timestamp,
@@ -52,8 +51,8 @@ def load_chat_history(user_id: str, session_id: str = None, limit: int = 6) -> l
     Use this tool to load the chat history, mainly here to build the chat window back up on new browser load.
     """
     if DEBUG:
-            start = time.perf_counter()
-            print("ALFRED USING LOAD CHAT HISTORY TOOL")
+        start = time.perf_counter()
+        print("[DEBUG] Using load_chat_history TOOL\n")
 
     conn = get_db_connection()
     cursor = conn.cursor()
